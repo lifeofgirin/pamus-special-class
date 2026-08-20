@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "./lib/supabase";
 
 const ADMIN_CODE = "2026180";
-
 const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
 
 function pad(value) {
@@ -37,12 +36,22 @@ function formatTime(value) {
   return value ? String(value).slice(0, 5) : "";
 }
 
+function Logo({ small = false }) {
+  return (
+    <img
+      src="/logo.webp"
+      alt="Pamus Grit English"
+      className={small ? "brand-logo small" : "brand-logo"}
+    />
+  );
+}
+
 function Home({ onStudent, onAdmin }) {
   return (
     <div className="landing-shell">
       <main className="landing-card">
         <header className="brand-row">
-          <div className="brand-mark">P</div>
+          <Logo />
           <div>
             <div className="brand-title">Pamus Grit English</div>
             <div className="brand-sub">Weekend Special Class</div>
@@ -124,7 +133,7 @@ function StudentLogin({ onBack, onSuccess }) {
       <main className="panel login-panel">
         <button className="back" onClick={onBack}>←</button>
         <div className="panel-head">
-          <div className="mini-mark">P</div>
+          <Logo small />
           <h2>학생 확인</h2>
           <p>학원에 등록된 학생 정보를 입력해주세요.</p>
         </div>
@@ -174,7 +183,7 @@ function StudentDashboard({ student, onLogout }) {
     ] = await Promise.all([
       supabase
         .from("special_classes")
-        .select("id,title,class_date,start_time,capacity,created_at")
+        .select("id,title,class_date,start_time,capacity,is_closed,created_at")
         .order("class_date", { ascending: true })
         .order("start_time", { ascending: true }),
       supabase
@@ -218,6 +227,11 @@ function StudentDashboard({ student, onLogout }) {
 
   async function apply(item) {
     if (isRegistered(item.id)) return;
+
+    if (item.is_closed) {
+      alert("관리자가 신청을 마감한 특강입니다.");
+      return;
+    }
 
     const { count, error: countError } = await supabase
       .from("registrations")
@@ -281,9 +295,12 @@ function StudentDashboard({ student, onLogout }) {
   return (
     <div className="dashboard-shell">
       <header className="topbar">
-        <div>
-          <strong>Pamus Grit English</strong>
-          <span>{student.name} 학생</span>
+        <div className="topbar-brand">
+          <Logo small />
+          <div>
+            <strong>Pamus Grit English</strong>
+            <span>{student.name} 학생</span>
+          </div>
         </div>
         <button onClick={onLogout}>나가기</button>
       </header>
@@ -312,14 +329,19 @@ function StudentDashboard({ student, onLogout }) {
                   {items.map((item) => {
                     const mine = isRegistered(item.id);
                     const full = item.current >= item.capacity;
+                    const closed = item.is_closed || full;
                     const percent = Math.min(
                       100,
                       (item.current / Math.max(item.capacity, 1)) * 100
                     );
 
                     return (
-                      <article className="class-card" key={item.id}>
-                        <div className="class-day">{formatTime(item.start_time)}</div>
+                      <article className={`class-card ${item.is_closed ? "closed-card" : ""}`} key={item.id}>
+                        <div className="class-card-top">
+                          <div className="class-day">{formatTime(item.start_time)}</div>
+                          {item.is_closed && <span className="closed-badge">신청마감</span>}
+                        </div>
+
                         <h3>{item.title}</h3>
 
                         <div className="capacity-line">
@@ -342,10 +364,16 @@ function StudentDashboard({ student, onLogout }) {
                         ) : (
                           <button
                             className="primary-btn"
-                            disabled={full || busyId === item.id}
+                            disabled={closed || busyId === item.id}
                             onClick={() => apply(item)}
                           >
-                            {full ? "신청 마감" : busyId === item.id ? "신청 중..." : "신청하기"}
+                            {item.is_closed
+                              ? "관리자 마감"
+                              : full
+                              ? "정원 마감"
+                              : busyId === item.id
+                              ? "신청 중..."
+                              : "신청하기"}
                           </button>
                         )}
                       </article>
@@ -380,7 +408,7 @@ function AdminLogin({ onBack, onSuccess }) {
       <main className="panel login-panel">
         <button className="back" onClick={onBack}>←</button>
         <div className="panel-head">
-          <div className="mini-mark">P</div>
+          <Logo small />
           <h2>관리자 로그인</h2>
           <p>주말특강 관리 페이지입니다.</p>
         </div>
@@ -483,7 +511,7 @@ function MultiDateCalendar({ selected, onChange }) {
   );
 }
 
-function StudentManager({ students, onRefresh }) {
+function StudentManager({ students, onRefresh, onViewStudent }) {
   const fileRef = useRef(null);
   const [name, setName] = useState("");
   const [phoneLast4, setPhoneLast4] = useState("");
@@ -520,7 +548,9 @@ function StudentManager({ students, onRefresh }) {
   async function removeStudent(student) {
     if (!confirm(`${student.name} 학생을 삭제할까요?`)) return;
 
+    await supabase.from("registrations").delete().eq("student_id", student.id);
     const { error } = await supabase.from("students").delete().eq("id", student.id);
+
     if (error) {
       alert("학생 삭제에 실패했습니다.");
       return;
@@ -675,11 +705,14 @@ function StudentManager({ students, onRefresh }) {
         ) : (
           filtered.map((student) => (
             <div className="student-row" key={student.id}>
-              <div>
+              <button className="student-info-button" type="button" onClick={() => onViewStudent(student.id)}>
                 <strong>{student.name}</strong>
                 <span>****{student.phone_last4}</span>
+              </button>
+              <div className="student-row-actions">
+                <button type="button" onClick={() => onViewStudent(student.id)}>신청내역</button>
+                <button type="button" className="delete-text" onClick={() => removeStudent(student)}>삭제</button>
               </div>
-              <button type="button" onClick={() => removeStudent(student)}>삭제</button>
             </div>
           ))
         )}
@@ -735,12 +768,12 @@ function Timetable({ classes, counts, onSelect }) {
                       {items.map((item) => (
                         <button
                           type="button"
-                          className="schedule-block"
+                          className={`schedule-block ${item.is_closed ? "schedule-closed" : ""}`}
                           key={item.id}
                           onClick={() => onSelect(item.id)}
                         >
                           <strong>{item.title}</strong>
-                          <span>{counts[item.id] || 0}/{item.capacity}명</span>
+                          <span>{counts[item.id] || 0}/{item.capacity}명 {item.is_closed ? "· 마감" : ""}</span>
                         </button>
                       ))}
                     </div>
@@ -762,7 +795,15 @@ function AdminDashboard({ onLogout }) {
   const [students, setStudents] = useState([]);
   const [counts, setCounts] = useState({});
   const [selectedClassId, setSelectedClassId] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    class_date: "",
+    start_time: "",
+    capacity: 1,
+  });
   const [form, setForm] = useState({
     title: "",
     start_time: "10:00",
@@ -778,7 +819,7 @@ function AdminDashboard({ onLogout }) {
     ] = await Promise.all([
       supabase
         .from("special_classes")
-        .select("id,title,class_date,start_time,capacity,created_at")
+        .select("id,title,class_date,start_time,capacity,is_closed,created_at")
         .order("class_date", { ascending: true })
         .order("start_time", { ascending: true }),
       supabase.from("registrations").select("*"),
@@ -825,6 +866,7 @@ function AdminDashboard({ onLogout }) {
       day: weekdayName(date),
       start_time: form.start_time,
       capacity: Number(form.capacity),
+      is_closed: false,
     }));
 
     setCreating(true);
@@ -869,7 +911,62 @@ function AdminDashboard({ onLogout }) {
     await loadData();
   }
 
+  async function toggleClosed(item) {
+    const { error } = await supabase
+      .from("special_classes")
+      .update({ is_closed: !item.is_closed })
+      .eq("id", item.id);
+
+    if (error) {
+      console.error(error);
+      alert("마감 상태 변경에 실패했습니다.");
+      return;
+    }
+
+    await loadData();
+  }
+
+  function beginEdit(item) {
+    setEditForm({
+      title: item.title,
+      class_date: item.class_date,
+      start_time: formatTime(item.start_time),
+      capacity: item.capacity,
+    });
+    setEditing(true);
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault();
+
+    if (!editForm.title.trim() || !editForm.class_date || !editForm.start_time || Number(editForm.capacity) < 1) {
+      alert("수정 정보를 확인해주세요.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("special_classes")
+      .update({
+        title: editForm.title.trim(),
+        class_date: editForm.class_date,
+        day: weekdayName(editForm.class_date),
+        start_time: editForm.start_time,
+        capacity: Number(editForm.capacity),
+      })
+      .eq("id", selectedClassId);
+
+    if (error) {
+      console.error(error);
+      alert("특강 수정에 실패했습니다.");
+      return;
+    }
+
+    setEditing(false);
+    await loadData();
+  }
+
   const selectedClass = classes.find((item) => item.id === selectedClassId);
+
   const selectedApplicants = selectedClass
     ? registrations
         .filter((reg) => reg.special_class_id === selectedClass.id)
@@ -883,12 +980,28 @@ function AdminDashboard({ onLogout }) {
         })
     : [];
 
+  const selectedStudent = students.find((student) => student.id === selectedStudentId);
+  const selectedStudentClasses = selectedStudent
+    ? registrations
+        .filter((reg) => reg.student_id === selectedStudent.id)
+        .map((reg) => classes.find((item) => item.id === reg.special_class_id))
+        .filter(Boolean)
+        .sort((a, b) => {
+          const dateCompare = String(a.class_date).localeCompare(String(b.class_date));
+          if (dateCompare !== 0) return dateCompare;
+          return formatTime(a.start_time).localeCompare(formatTime(b.start_time));
+        })
+    : [];
+
   return (
     <div className="dashboard-shell">
       <header className="topbar">
-        <div>
-          <strong>Pamus Grit English</strong>
-          <span>주말특강 관리자</span>
+        <div className="topbar-brand">
+          <Logo small />
+          <div>
+            <strong>Pamus Grit English</strong>
+            <span>주말특강 관리자</span>
+          </div>
         </div>
         <button onClick={onLogout}>로그아웃</button>
       </header>
@@ -897,7 +1010,7 @@ function AdminDashboard({ onLogout }) {
         <section className="welcome admin-welcome">
           <span className="pill">ADMIN</span>
           <h1>주말특강 관리</h1>
-          <p>학생 등록부터 날짜별 특강 개설, 신청자 확인까지 한 화면에서 관리합니다.</p>
+          <p>학생 등록부터 특강 개설, 수정, 마감, 신청자 확인까지 관리합니다.</p>
         </section>
 
         <div className="admin-tabs">
@@ -916,7 +1029,11 @@ function AdminDashboard({ onLogout }) {
         </div>
 
         {activeTab === "students" ? (
-          <StudentManager students={students} onRefresh={loadData} />
+          <StudentManager
+            students={students}
+            onRefresh={loadData}
+            onViewStudent={setSelectedStudentId}
+          />
         ) : (
           <>
             <section className="create-layout">
@@ -924,7 +1041,7 @@ function AdminDashboard({ onLogout }) {
                 <div className="section-title">
                   <div>
                     <h3>특강 만들기</h3>
-                    <p>날짜는 달력에서 여러 개를 한꺼번에 선택하세요.</p>
+                    <p>달력에서 여러 날짜를 선택해서 한꺼번에 만들 수 있습니다.</p>
                   </div>
                 </div>
 
@@ -972,7 +1089,7 @@ function AdminDashboard({ onLogout }) {
               <div className="section-title">
                 <div>
                   <h3>특강 타임테이블</h3>
-                  <p>가로는 날짜, 세로는 시간입니다. 블록을 누르면 신청자를 볼 수 있습니다.</p>
+                  <p>블록을 누르면 신청자 확인, 수정, 수동 마감을 할 수 있습니다.</p>
                 </div>
                 <strong>{classes.length}개</strong>
               </div>
@@ -984,31 +1101,131 @@ function AdminDashboard({ onLogout }) {
       </main>
 
       {selectedClass && (
-        <div className="modal-backdrop" onClick={() => setSelectedClassId(null)}>
+        <div className="modal-backdrop" onClick={() => { setSelectedClassId(null); setEditing(false); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedClassId(null)}>×</button>
+            <button className="modal-close" onClick={() => { setSelectedClassId(null); setEditing(false); }}>×</button>
 
-            <div className="class-day">{formatDate(selectedClass.class_date, true)}</div>
-            <h2>{selectedClass.title}</h2>
-            <p>{formatTime(selectedClass.start_time)} · 신청 {selectedApplicants.length}/{selectedClass.capacity}명</p>
+            {!editing ? (
+              <>
+                <div className="modal-title-row">
+                  <div>
+                    <div className="class-day">{formatDate(selectedClass.class_date, true)}</div>
+                    <h2>{selectedClass.title}</h2>
+                    <p>{formatTime(selectedClass.start_time)} · 신청 {selectedApplicants.length}/{selectedClass.capacity}명</p>
+                  </div>
+                  {selectedClass.is_closed && <span className="closed-badge">수동 마감</span>}
+                </div>
 
-            <div className="applicant-list">
-              {selectedApplicants.length === 0 ? (
-                <div className="empty-box">아직 신청자가 없습니다.</div>
+                <div className="modal-action-grid">
+                  <button className="secondary-action" onClick={() => beginEdit(selectedClass)}>특강 수정</button>
+                  <button className={selectedClass.is_closed ? "open-action" : "close-action"} onClick={() => toggleClosed(selectedClass)}>
+                    {selectedClass.is_closed ? "신청 다시 열기" : "신청 수동 마감"}
+                  </button>
+                </div>
+
+                <div className="applicant-list">
+                  {selectedApplicants.length === 0 ? (
+                    <div className="empty-box">아직 신청자가 없습니다.</div>
+                  ) : (
+                    selectedApplicants.map((student, index) => (
+                      <button
+                        className="applicant-row applicant-button"
+                        key={student.id}
+                        onClick={() => setSelectedStudentId(student.student_id)}
+                      >
+                        <b>{index + 1}</b>
+                        <span>{student.name}</span>
+                        <small>****{student.phone_last4}</small>
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                <button className="danger-btn" onClick={() => deleteClass(selectedClass.id)}>
+                  이 특강 삭제
+                </button>
+              </>
+            ) : (
+              <form className="edit-form" onSubmit={saveEdit}>
+                <h2>특강 수정</h2>
+
+                <label>
+                  특강 제목
+                  <input
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  날짜
+                  <div className="native-wrap">
+                    <input
+                      type="date"
+                      value={editForm.class_date}
+                      onChange={(e) => setEditForm({ ...editForm, class_date: e.target.value })}
+                    />
+                  </div>
+                </label>
+
+                <div className="form-two">
+                  <label>
+                    시간
+                    <div className="native-wrap">
+                      <input
+                        type="time"
+                        value={editForm.start_time}
+                        onChange={(e) => setEditForm({ ...editForm, start_time: e.target.value })}
+                      />
+                    </div>
+                  </label>
+
+                  <label>
+                    정원
+                    <input
+                      type="number"
+                      min="1"
+                      value={editForm.capacity}
+                      onChange={(e) => setEditForm({ ...editForm, capacity: e.target.value })}
+                    />
+                  </label>
+                </div>
+
+                <div className="modal-action-grid">
+                  <button type="button" className="secondary-action" onClick={() => setEditing(false)}>취소</button>
+                  <button className="primary-btn">수정 저장</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {selectedStudent && (
+        <div className="modal-backdrop student-modal-layer" onClick={() => setSelectedStudentId(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedStudentId(null)}>×</button>
+            <div className="class-day">학생 신청내역</div>
+            <h2>{selectedStudent.name}</h2>
+            <p>전화번호 ****{selectedStudent.phone_last4} · 총 {selectedStudentClasses.length}개 신청</p>
+
+            <div className="student-registration-list">
+              {selectedStudentClasses.length === 0 ? (
+                <div className="empty-box">신청한 특강이 없습니다.</div>
               ) : (
-                selectedApplicants.map((student, index) => (
-                  <div className="applicant-row" key={student.id}>
-                    <b>{index + 1}</b>
-                    <span>{student.name}</span>
-                    <small>****{student.phone_last4}</small>
+                selectedStudentClasses.map((item) => (
+                  <div className="student-registration-card" key={item.id}>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <span>{formatDate(item.class_date)} · {formatTime(item.start_time)}</span>
+                    </div>
+                    <span className={item.is_closed ? "tiny-status closed" : "tiny-status"}>
+                      {item.is_closed ? "마감" : "신청중"}
+                    </span>
                   </div>
                 ))
               )}
             </div>
-
-            <button className="danger-btn" onClick={() => deleteClass(selectedClass.id)}>
-              이 특강 삭제
-            </button>
           </div>
         </div>
       )}
