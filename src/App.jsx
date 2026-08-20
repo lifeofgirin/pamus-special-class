@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
 
-const ADMIN_CODE = "1004";
+const ADMIN_CODE = "2026180";
 
 function formatTime(value) {
   if (!value) return "";
