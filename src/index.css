@@ -2,7 +2,7 @@
 
 :root {
   font-family: "Inter", "Noto Sans KR", sans-serif;
-  color: #171717;
+  color: #c61f2b;
   background: #f5f6f8;
   font-synthesis: none;
 }
@@ -46,7 +46,7 @@ button { cursor: pointer; }
   border-radius: 14px;
   display: grid;
   place-items: center;
-  background: #171717;
+  background: #c61f2b;
   color: white;
   font-weight: 800;
   font-size: 20px;
@@ -98,12 +98,12 @@ button { cursor: pointer; }
   background: white;
   padding: 20px;
   text-align: left;
-  color: #171717;
+  color: #c61f2b;
 }
 
 .role-dark {
-  background: #171717;
-  border-color: #171717;
+  background: #c61f2b;
+  border-color: #c61f2b;
   color: white;
 }
 
@@ -117,7 +117,7 @@ button { cursor: pointer; }
   font-size: 20px;
 }
 
-.role-dark .role-icon { background: #2d2d2d; }
+.role-dark .role-icon { background: #a91823; }
 .role-card strong { display: block; font-size: 16px; }
 .role-card small { display: block; margin-top: 5px; color: #999; font-size: 11px; }
 .role-dark small { color: #aaa; }
@@ -204,7 +204,7 @@ input:focus, select:focus {
 }
 
 .primary-btn {
-  background: #171717;
+  background: #c61f2b;
   color: white;
 }
 
@@ -307,7 +307,7 @@ input:focus, select:focus {
   margin: 9px 0 19px;
 }
 
-.bar div { height: 100%; background: #171717; }
+.bar div { height: 100%; background: #c61f2b; }
 
 .empty-box {
   padding: 28px;
@@ -336,7 +336,7 @@ input:focus, select:focus {
 }
 
 .admin-tabs button.active {
-  background: #171717;
+  background: #c61f2b;
   color: white;
 }
 
@@ -435,9 +435,9 @@ input:focus, select:focus {
 .calendar-day small { color: #aaa; font-size: 9px; }
 
 .calendar-day.selected {
-  background: #171717;
+  background: #c61f2b;
   color: white;
-  border-color: #171717;
+  border-color: #c61f2b;
 }
 
 .calendar-day.selected small { color: #aaa; }
@@ -526,7 +526,7 @@ input:focus, select:focus {
   width: 100%;
   border: 0;
   border-radius: 10px;
-  background: #171717;
+  background: #c61f2b;
   color: white;
   padding: 9px;
   text-align: left;
@@ -662,7 +662,7 @@ input:focus, select:focus {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #171717;
+  background: #c61f2b;
   color: white;
   font-size: 10px;
 }
@@ -716,5 +716,243 @@ input:focus, select:focus {
 
   .form-two {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+
+/* =========================================================
+   V4 RED THEME + LARGER TYPE
+   ========================================================= */
+
+:root {
+  font-size: 17px;
+}
+
+body {
+  color: #202020;
+}
+
+.brand-title {
+  font-size: 17px;
+}
+
+.brand-sub {
+  font-size: 12px;
+}
+
+.hero p,
+.welcome p,
+.section-title p {
+  font-size: 15px;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 9px 14px;
+}
+
+.role-card strong {
+  font-size: 18px;
+}
+
+.role-card small {
+  font-size: 13px;
+}
+
+.panel-head h2 {
+  font-size: 30px;
+}
+
+.panel-head p {
+  font-size: 14px;
+}
+
+label {
+  font-size: 14px;
+}
+
+input,
+select {
+  font-size: 16px;
+}
+
+.primary-btn,
+.cancel-btn,
+.danger-btn {
+  font-size: 16px;
+  padding: 16px;
+}
+
+.topbar strong {
+  font-size: 17px;
+}
+
+.topbar span {
+  font-size: 12px;
+}
+
+.topbar button {
+  font-size: 13px;
+  padding: 10px 15px;
+}
+
+.date-heading strong {
+  font-size: 21px;
+}
+
+.date-heading span {
+  font-size: 13px;
+}
+
+.class-day {
+  font-size: 14px;
+  color: #c61f2b;
+}
+
+.class-card h3 {
+  font-size: 21px;
+}
+
+.capacity-line {
+  font-size: 13px;
+}
+
+.admin-tabs button {
+  font-size: 14px;
+  padding: 12px 18px;
+}
+
+.section-title h3 {
+  font-size: 20px;
+}
+
+.calendar-toolbar strong {
+  font-size: 17px;
+}
+
+.calendar-actions button {
+  font-size: 13px;
+}
+
+.calendar-week {
+  font-size: 12px;
+}
+
+.calendar-day span {
+  font-size: 16px;
+}
+
+.calendar-day small {
+  font-size: 10px;
+}
+
+.selected-dates > span {
+  font-size: 13px;
+}
+
+.selected-dates button {
+  font-size: 12px;
+}
+
+.timetable thead th {
+  font-size: 12px;
+}
+
+.timetable .sticky-time {
+  font-size: 13px;
+}
+
+.schedule-block strong {
+  font-size: 13px;
+}
+
+.schedule-block span {
+  font-size: 11px;
+  color: #ffe2e5;
+}
+
+.student-row strong {
+  font-size: 15px;
+}
+
+.student-row span {
+  font-size: 12px;
+}
+
+.student-row button {
+  font-size: 13px;
+}
+
+.empty-box {
+  font-size: 14px;
+}
+
+.applicant-row span {
+  font-size: 14px;
+}
+
+.applicant-row small {
+  font-size: 12px;
+}
+
+/* Red accent states */
+.role-dark,
+.primary-btn,
+.schedule-block,
+.calendar-day.selected,
+.applicant-row b,
+.brand-mark,
+.mini-mark {
+  background: #c61f2b;
+}
+
+.role-dark {
+  border-color: #c61f2b;
+}
+
+.role-dark .role-icon {
+  background: #a91823;
+}
+
+.calendar-day.selected {
+  border-color: #c61f2b;
+}
+
+.bar div {
+  background: #c61f2b;
+}
+
+.admin-tabs button.active {
+  background: #c61f2b;
+}
+
+.class-card,
+.admin-panel,
+.calendar-card {
+  border-color: #ead5d7;
+}
+
+.role-card:hover,
+.class-card:hover,
+.schedule-block:hover,
+.primary-btn:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+@media (max-width: 760px) {
+  :root {
+    font-size: 16px;
+  }
+
+  .hero h1 {
+    font-size: 48px;
+  }
+
+  .welcome h1 {
+    font-size: 40px;
+  }
+
+  .class-card h3 {
+    font-size: 20px;
   }
 }
