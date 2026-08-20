@@ -111,7 +111,7 @@ function StudentLogin({ onBack, onSuccess }) {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="예: 김도훈"
+              placeholder="예: 장민준"
               autoComplete="name"
             />
           </label>
